@@ -862,8 +862,20 @@ const main: JupyterFrontEndPlugin<ITreePathUpdater> = {
           }
         })
         .catch(err => {
+          // Translate known build error messages
+          let errorMessage = err.message;
+          if (err.message === 'Build aborted') {
+            errorMessage = trans.__('Build aborted');
+          } else if (err.message?.startsWith('Build failed with')) {
+            const statusMatch = err.message.match(/Build failed with (\d+)/);
+            const status = statusMatch ? statusMatch[1] : '';
+            errorMessage = trans.__(
+              "Build failed with %1.\n\nIf you are experiencing the build failure after installing an extension (or trying to include previously installed extension after updating JupyterLab) please check the extension repository for new installation instructions as many extensions migrated to the prebuilt extensions system which no longer requires rebuilding JupyterLab (but uses a different installation procedure, typically involving a package manager such as 'pip' or 'conda').\n\nIf you specifically intended to install a source extension, please run 'jupyter lab build' on the server for full output.",
+              status
+            );
+          }
           void showErrorMessage(trans.__('Build Failed'), {
-            message: <pre>{err.message}</pre>
+            message: <pre>{errorMessage}</pre>
           });
         });
     };
